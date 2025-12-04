@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "requests>=2.32.5",
+]
 
 [tool.ruff]
 # 1行の最大文字数
@@ -44,7 +46,7 @@ select = [
 
 # プロジェクト全体で無視するエラーコード
 ignore = [
-    # "F401",  # 未使用importはエラー扱いとしない
+    "F401",  # 未使用importはエラー扱いとしない
 ]
 
 # ファイル単位で無視するエラーコード
