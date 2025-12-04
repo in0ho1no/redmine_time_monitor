@@ -1,63 +1,56 @@
 import datetime
-from collections import defaultdict
 
 import requests
+import urllib3
 
 import user_setting as us
 
+# 自己署名証明書の警告(InsecureRequestWarning)を非表示にする設定
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-def get_yesterday_time_entries():
-    # 昨日の日付を取得
+
+def get_redmine_data():
+    """Redmineからユーザーと昨日の作業時間を取得する"""
+    headers = {'X-Redmine-API-Key': us.REDMINE_API_KEY}
+
     yesterday = datetime.date.today() - datetime.timedelta(days=1)
     str_date = yesterday.strftime('%Y-%m-%d')
 
-    print(f'--- {str_date} (昨日) の作業時間を取得中 ---')
+    # 共通の接続オプション (verify=False が重要)
+    request_opts = {
+        'headers': headers,
+        'verify': False,  # <--- ここを追加！SSL証明書の検証を無視します
+    }
 
-    headers = {'X-Redmine-API-Key': us.API_KEY}
-
-    # APIパラメータ: spent_onで日付指定, limit=100で多めに取得
-    params = {'spent_on': str_date, 'limit': 100}
+    print(f'--- {str_date} のデータを取得中 ---')
 
     try:
-        response = requests.get(f'{us.REDMINE_URL}/time_entries.json', headers=headers, params=params)
-        response.raise_for_status()
-        data = response.json()
+        # 全アクティブユーザー取得
+        users_resp = requests.get(
+            f'{us.REDMINE_URL}/users.json',
+            params={'status': 1, 'limit': 100},
+            **request_opts,  # オプションを適用
+        )
+        users_resp.raise_for_status()
+        all_users = {u['id']: f'{u["lastname"]} {u["firstname"]}' for u in users_resp.json()['users']}
 
-        entries = data['time_entries']
+        # 昨日の作業時間取得
+        entries_resp = requests.get(
+            f'{us.REDMINE_URL}/time_entries.json',
+            params={'spent_on': str_date, 'limit': 100},
+            **request_opts,  # オプションを適用
+        )
+        entries_resp.raise_for_status()
+        entries = entries_resp.json()['time_entries']
 
-        if not entries:
-            print('昨日の作業時間の入力はありません。')
-            return
+    except Exception as e:
+        print(f'Redmineデータ取得エラー: {e}')
+        return None, None, None
 
-        # ユーザーごとの合計時間を集計
-        user_totals = defaultdict(float)
+    entered_users = {}  # {user_id: total_hours}
+    for entry in entries:
+        uid = entry['user']['id']
+        hours = entry['hours']
+        entered_users[uid] = entered_users.get(uid, 0) + hours
 
-        print(f'\n{"ユーザー名":<15} | {"プロジェクト":<15} | {"時間":<5} | {"コメント"}')
-        print('-' * 60)
-
-        for entry in entries:
-            user_name = entry['user']['name']
-            project_name = entry['project']['name']
-            hours = entry['hours']
-            comments = entry.get('comments', '')
-
-            # 詳細出力
-            print(f'{user_name:<15} | {project_name:<15} | {hours:<5} | {comments}')
-
-            # 集計
-            user_totals[user_name] += hours
-
-        print('\n--- ユーザー別合計時間 ---')
-        for user, total in user_totals.items():
-            print(f'{user}: {total} 時間')
-
-            # 8時間未満の場合に警告を出すなどのロジックも追加可能
-            if total < 8.0:
-                print(f'  -> ⚠️ {user} さんの入力時間が8時間未満です')
-
-    except requests.exceptions.RequestException as e:
-        print(f'エラーが発生しました: {e}')
-
-
-if __name__ == '__main__':
-    get_yesterday_time_entries()
+    return str_date, all_users, entered_users
