@@ -8,6 +8,5 @@ TARGET_PROJECT_ID = 'projects'
 # 新規チケット作成する際のトラッカー指定
 TRACKER_ID = 3
 
-# requestのオプション
-HEADERS = {'X-Redmine-API-Key': REDMINE_API_KEY}
-REQUEST_OPTS = {'headers': HEADERS, 'verify': False}
+# 親チケットにしたいID
+PARENT_TICKET_ID = 44

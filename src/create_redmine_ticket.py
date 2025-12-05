@@ -16,7 +16,7 @@ def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict
     for uid, name in target_users.items():
         if uid in entered_users:
             hours = entered_users[uid]
-            ok_lines.append(f'- {name}: {hours}h')
+            ok_lines.append(f'- {name}: {hours:.2f}h')
         else:
             missing_names.append(f'- {name}')
 
@@ -48,6 +48,7 @@ def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict
     payload = {
         'issue': {
             'project_id': us.TARGET_PROJECT_ID,
+            'parent_issue_id': us.PARENT_TICKET_ID,
             'tracker_id': us.TRACKER_ID,
             'subject': subject,
             'description': description,

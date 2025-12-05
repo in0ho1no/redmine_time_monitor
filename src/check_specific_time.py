@@ -12,12 +12,15 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def get_specific_date_time(specific_date: datetime.date) -> tuple[str | None, dict | None, dict | None]:
     """特定プロジェクトのメンバーと指定日の作業時間を取得する"""
 
+    headers = {'X-Redmine-API-Key': us.REDMINE_API_KEY}
+    request_opts = {'headers': headers, 'verify': False}
+
     str_date = specific_date.strftime('%Y-%m-%d')
     print(f'--- {str_date} のデータを取得中 ---')
 
     try:
         # メンバー取得
-        members_resp = requests.get(f'{us.REDMINE_URL}/projects/{us.TARGET_PROJECT_ID}/memberships.json', params={'limit': 100}, **us.REQUEST_OPTS)
+        members_resp = requests.get(f'{us.REDMINE_URL}/projects/{us.TARGET_PROJECT_ID}/memberships.json', params={'limit': 100}, **request_opts)
         members_resp.raise_for_status()
 
         target_users: dict = {}
@@ -26,7 +29,7 @@ def get_specific_date_time(specific_date: datetime.date) -> tuple[str | None, di
                 target_users[m['user']['id']] = m['user']['name']
 
         # 作業時間取得
-        entries_resp = requests.get(f'{us.REDMINE_URL}/time_entries.json', params={'spent_on': str_date, 'limit': 100}, **us.REQUEST_OPTS)
+        entries_resp = requests.get(f'{us.REDMINE_URL}/time_entries.json', params={'spent_on': str_date, 'limit': 100}, **request_opts)
         entries_resp.raise_for_status()
         entries = entries_resp.json()['time_entries']
 
