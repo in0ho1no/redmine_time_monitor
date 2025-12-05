@@ -1,6 +1,7 @@
 import datetime
 
 import check_specific_time
+import create_redmine_ticket
 
 
 def get_yesterday() -> datetime.date:
@@ -30,6 +31,7 @@ def main() -> None:
         return
 
     print(target_date, t_users, e_users)
+    create_redmine_ticket.create_redmine_ticket(target_date, t_users, e_users)
 
 
 if __name__ == '__main__':
