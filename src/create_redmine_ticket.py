@@ -7,7 +7,7 @@ import user_setting as us
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict) -> None:
+def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict, entered_projects: dict) -> None:
     """Redmineにチケットを作成する"""
 
     missing_table_rows = []
@@ -22,6 +22,11 @@ def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict
         else:
             missing_table_rows.append(f'|{name}|---|')
 
+    # --- プロジェクト集計用テーブル行の作成 ---
+    project_table_rows = []
+    for prj_name, hours in entered_projects.items():
+        project_table_rows.append(f'|{prj_name}|{hours:.2f}|')
+
     # --- チケットの内容を作成 ---
 
     # 件名: 未入力者がいるかどうかで変える
@@ -35,12 +40,12 @@ def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict
     # 説明文
     description = f'h3. 対象日: {date_str}\n\n'
 
-    header_row = '|_. 氏名 |_. 時間 |\n'
+    user_header_row = '|_. 氏名 |_. 時間 |\n'
 
     if missing_table_rows:
         description += 'h4. ⚠️ 未入力のメンバー\n\n'
         description += '入力お願いします。\n\n'
-        description += header_row
+        description += user_header_row
         description += '\n'.join(missing_table_rows) + '\n'
     else:
         description += 'h4. 🎉 全員の入力が完了しています\n'
@@ -50,8 +55,15 @@ def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict
     if ok_table_rows:
         description += 'h4. ✅ 入力済みのメンバー\n\n'
         description += '入力ありがとうございます。\n\n'
-        description += header_row
+        description += user_header_row
         description += '\n'.join(ok_table_rows) + '\n'
+
+    # --- プロジェクト別集計 ---
+    if project_table_rows:
+        description += '\n'
+        description += 'h4. 📊 プロジェクト別集計\n\n'
+        description += '|_. プロジェクト名 |_. 合計時間 |\n'
+        description += '\n'.join(project_table_rows) + '\n'
 
     # --- チケット作成リクエスト ---
     payload = {

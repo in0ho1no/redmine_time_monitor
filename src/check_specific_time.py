@@ -9,8 +9,11 @@ import user_setting as us
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def get_specific_date_time(specific_date: datetime.date) -> tuple[str | None, dict | None, dict | None]:
-    """特定プロジェクトのメンバーと指定日の作業時間を取得する"""
+def get_specific_date_time(specific_date: datetime.date) -> tuple[str | None, dict | None, dict | None, dict | None]:
+    """
+    特定プロジェクトのメンバーと指定日の作業時間を取得する
+    Return: (日付文字列, 対象ユーザーdict, ユーザー別集計dict, プロジェクト別集計dict)
+    """
 
     headers = {'X-Redmine-API-Key': us.REDMINE_API_KEY}
     request_opts = {'headers': headers, 'verify': False}
@@ -35,13 +38,24 @@ def get_specific_date_time(specific_date: datetime.date) -> tuple[str | None, di
 
     except Exception as e:
         print(f'データ取得エラー: {e}')
-        return None, None, None
+        return None, None, None, None
 
-    # 集計
+    # --- 集計 ---
     entered_users: dict = {}
+    project_totals: dict = {}
+
     for entry in entries:
         uid = entry['user']['id']
-        if uid in target_users:
-            entered_users[uid] = entered_users.get(uid, 0) + entry['hours']
 
-    return str_date, target_users, entered_users
+        # ターゲットプロジェクトのメンバーによる入力のみを集計対象とする
+        if uid in target_users:
+            hours = entry['hours']
+
+            # 1. ユーザー単位の集計
+            entered_users[uid] = entered_users.get(uid, 0) + hours
+
+            # 2. プロジェクト単位の集計
+            prj_name = entry['project']['name']
+            project_totals[prj_name] = project_totals.get(prj_name, 0) + hours
+
+    return str_date, target_users, entered_users, project_totals
