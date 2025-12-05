@@ -3,6 +3,10 @@ import datetime
 import check_specific_time
 import create_redmine_ticket
 
+EXCLUDE_LIST = [
+    5,  # new User1
+]
+
 
 def get_yesterday() -> datetime.date:
     """昨日のdatetime.dateオブジェクトを取得する"""
@@ -25,6 +29,10 @@ def main() -> None:
     if t_users is None:
         print('target_date is None')
         return
+
+    for ex in EXCLUDE_LIST:
+        if ex in t_users:
+            t_users.pop(ex)
 
     if e_users is None:
         print('target_date is None')
