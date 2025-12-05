@@ -23,5 +23,8 @@
 		},
 		
 		"autoDocstring.docstringFormat": "google",
+		"[json]": {
+			"editor.defaultFormatter": "vscode.json-language-features"
+		},
 	}
 }
