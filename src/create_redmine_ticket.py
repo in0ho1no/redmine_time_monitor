@@ -10,20 +10,22 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict) -> None:
     """Redmineにチケットを作成する"""
 
-    missing_names = []
-    ok_lines = []
+    missing_table_rows = []
+    ok_table_rows = []
 
     for uid, name in target_users.items():
         if uid in entered_users:
             hours = entered_users[uid]
-            ok_lines.append(f'- {name}: {hours:.2f}h')
+            # Textile形式の表の行を作成 (| 名前 | 時間 |)
+            # 時間は .2f で小数2桁固定
+            ok_table_rows.append(f'|{name}|{hours:.2f}|')
         else:
-            missing_names.append(f'- {name}')
+            missing_table_rows.append(f'|{name}|---|')
 
     # --- チケットの内容を作成 ---
 
     # 件名: 未入力者がいるかどうかで変える
-    if missing_names:
+    if missing_table_rows:
         subject = f'【未入力あり】作業時間入力チェック ({date_str})'
         priority_id = 2  # 通常(2)
     else:
@@ -33,16 +35,23 @@ def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict
     # 説明文
     description = f'h3. 対象日: {date_str}\n\n'
 
-    if missing_names:
-        description += 'h4. ⚠️ 未入力のメンバー\n\n'
-        description += '\n'.join(missing_names) + '\n\n'
-        description += '入力お願いします。\n\n'
-    else:
-        description += 'h4. 🎉 全員の入力が完了しています\n\n'
+    header_row = '|_. 氏名 |_. 時間 |\n'
 
-    if ok_lines:
+    if missing_table_rows:
+        description += 'h4. ⚠️ 未入力のメンバー\n\n'
+        description += '入力お願いします。\n\n'
+        description += header_row
+        description += '\n'.join(missing_table_rows) + '\n'
+    else:
+        description += 'h4. 🎉 全員の入力が完了しています\n'
+
+    description += '\n'
+
+    if ok_table_rows:
         description += 'h4. ✅ 入力済みのメンバー\n\n'
-        description += '\n'.join(ok_lines) + '\n'
+        description += '入力ありがとうございます。\n\n'
+        description += header_row
+        description += '\n'.join(ok_table_rows) + '\n'
 
     # --- チケット作成リクエスト ---
     payload = {
