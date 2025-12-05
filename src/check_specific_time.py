@@ -9,12 +9,10 @@ import user_setting as us
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def get_redmine_data() -> tuple[str | None, dict | None, dict | None]:
-    """特定プロジェクトのメンバーと昨日の作業時間を取得する"""
+def get_specific_date_time(specific_date: datetime.date) -> tuple[str | None, dict | None, dict | None]:
+    """特定プロジェクトのメンバーと指定日の作業時間を取得する"""
 
-    yesterday = datetime.date.today() - datetime.timedelta(days=1)
-    str_date = yesterday.strftime('%Y-%m-%d')
-
+    str_date = specific_date.strftime('%Y-%m-%d')
     print(f'--- {str_date} のデータを取得中 ---')
 
     try:
