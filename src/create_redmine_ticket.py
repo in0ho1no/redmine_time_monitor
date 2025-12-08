@@ -1,0 +1,103 @@
+import requests  # type: ignore
+import urllib3
+
+import user_setting as us
+
+# 自己署名証明書の警告(InsecureRequestWarning)を非表示にする設定
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict, entered_projects: dict) -> None:
+    """Redmineにチケットを作成し、未入力者をウォッチャーに追加する"""
+
+    missing_table_rows = []
+    ok_table_rows = []
+
+    # ウォッチャーに追加するためのユーザーIDリスト
+    missing_user_ids = []
+
+    for uid, name in target_users.items():
+        if uid in entered_users:
+            hours = entered_users[uid]
+            # Textile形式の表の行を作成 (| 名前 | 時間 |)
+            # 時間は .2f で小数2桁固定
+            ok_table_rows.append(f'|{name}|{hours:.2f}|')
+        else:
+            missing_table_rows.append(f'|{name}|---|')
+            # 未入力者のIDをリストに追加
+            missing_user_ids.append(int(uid))
+
+    # --- プロジェクト集計用テーブル行の作成 ---
+    project_table_rows = []
+    for prj_name, hours in entered_projects.items():
+        project_table_rows.append(f'|{prj_name}|{hours:.2f}|')
+
+    # --- チケットの内容を作成 ---
+
+    # 件名: 未入力者がいるかどうかで変える
+    if missing_table_rows:
+        subject = f'【未入力あり】作業時間入力チェック ({date_str})'
+        priority_id = 2  # 通常(2)
+    else:
+        subject = f'【完了】作業時間入力チェック ({date_str})'
+        priority_id = 1  # 低め(1)
+
+    # 説明文
+    description = f'h3. 対象日: {date_str}\n\n'
+
+    user_header_row = '|_. 氏名 |_. 時間 |\n'
+
+    if missing_table_rows:
+        description += 'h4. ⚠️ 未入力のメンバー\n\n'
+        description += '入力お願いします。\n\n'
+        description += user_header_row
+        description += '\n'.join(missing_table_rows) + '\n'
+    else:
+        description += 'h4. 🎉 全員の入力が完了しています\n'
+
+    description += '\n'
+
+    if ok_table_rows:
+        description += 'h4. ✅ 入力済みのメンバー\n\n'
+        description += '入力ありがとうございます。\n\n'
+        description += user_header_row
+        description += '\n'.join(ok_table_rows) + '\n'
+
+    # --- プロジェクト別集計 ---
+    if project_table_rows:
+        description += '\n'
+        description += 'h4. 📊 プロジェクト別集計\n\n'
+        description += '|_. プロジェクト名 |_. 合計時間 |\n'
+        description += '\n'.join(project_table_rows) + '\n'
+
+    # --- チケット作成リクエスト ---
+    payload = {
+        'issue': {
+            'project_id': us.TARGET_PROJECT_ID,
+            'parent_issue_id': us.PARENT_TICKET_ID,
+            'tracker_id': us.TRACKER_ID,
+            'subject': subject,
+            'description': description,
+            'priority_id': priority_id,
+            'watcher_user_ids': missing_user_ids,
+        }
+    }
+
+    headers = {'X-Redmine-API-Key': us.REDMINE_API_KEY, 'Content-Type': 'application/json'}
+
+    print('Redmineチケットを作成中...')
+
+    try:
+        response = requests.post(f'{us.REDMINE_URL}/issues.json', json=payload, headers=headers, verify=False)
+        response.raise_for_status()
+
+        new_issue = response.json()
+        print(f'チケット作成成功! Issue ID: {new_issue["issue"]["id"]}')
+
+        if missing_user_ids:
+            print(f'ウォッチャー追加数: {len(missing_user_ids)}名')
+
+    except Exception as e:
+        print(f'チケット作成エラー: {e}')
+        if 'response' in locals():
+            print(response.text)

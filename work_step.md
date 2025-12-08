@@ -33,3 +33,9 @@
 pyproject.tomlの存在するフォルダ内で以下コマンドを実行する
 
     uv sync
+
+## redmineの情報取得
+
+`trackers.json`の指定でtracker情報を取得できる。
+
+    https: //localhost/redmineKome/trackers.json
