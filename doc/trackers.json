@@ -1,0 +1,67 @@
+{
+    "trackers": [
+        {
+            "id": 1,
+            "name": "バグ",
+            "default_status": {
+                "id": 1,
+                "name": "新規"
+            },
+            "description": null,
+            "enabled_standard_fields": [
+                "assigned_to_id",
+                "category_id",
+                "fixed_version_id",
+                "parent_issue_id",
+                "start_date",
+                "due_date",
+                "estimated_hours",
+                "done_ratio",
+                "description",
+                "priority_id"
+            ]
+        },
+        {
+            "id": 2,
+            "name": "機能",
+            "default_status": {
+                "id": 1,
+                "name": "新規"
+            },
+            "description": null,
+            "enabled_standard_fields": [
+                "assigned_to_id",
+                "category_id",
+                "fixed_version_id",
+                "parent_issue_id",
+                "start_date",
+                "due_date",
+                "estimated_hours",
+                "done_ratio",
+                "description",
+                "priority_id"
+            ]
+        },
+        {
+            "id": 3,
+            "name": "サポート",
+            "default_status": {
+                "id": 1,
+                "name": "新規"
+            },
+            "description": null,
+            "enabled_standard_fields": [
+                "assigned_to_id",
+                "category_id",
+                "fixed_version_id",
+                "parent_issue_id",
+                "start_date",
+                "due_date",
+                "estimated_hours",
+                "done_ratio",
+                "description",
+                "priority_id"
+            ]
+        }
+    ]
+}
