@@ -8,10 +8,13 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict, entered_projects: dict) -> None:
-    """Redmineにチケットを作成する"""
+    """Redmineにチケットを作成し、未入力者をウォッチャーに追加する"""
 
     missing_table_rows = []
     ok_table_rows = []
+
+    # ウォッチャーに追加するためのユーザーIDリスト
+    missing_user_ids = []
 
     for uid, name in target_users.items():
         if uid in entered_users:
@@ -21,6 +24,8 @@ def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict
             ok_table_rows.append(f'|{name}|{hours:.2f}|')
         else:
             missing_table_rows.append(f'|{name}|---|')
+            # 未入力者のIDをリストに追加
+            missing_user_ids.append(int(uid))
 
     # --- プロジェクト集計用テーブル行の作成 ---
     project_table_rows = []
@@ -74,6 +79,7 @@ def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict
             'subject': subject,
             'description': description,
             'priority_id': priority_id,
+            'watcher_user_ids': missing_user_ids,
         }
     }
 
@@ -87,6 +93,9 @@ def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict
 
         new_issue = response.json()
         print(f'チケット作成成功! Issue ID: {new_issue["issue"]["id"]}')
+
+        if missing_user_ids:
+            print(f'ウォッチャー追加数: {len(missing_user_ids)}名')
 
     except Exception as e:
         print(f'チケット作成エラー: {e}')
