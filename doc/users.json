@@ -1,0 +1,91 @@
+{
+    "users": [
+        {
+            "id": 8,
+            "login": "aoi.t",
+            "admin": false,
+            "firstname": "葵",
+            "lastname": "高橋",
+            "mail": "aoi.t@dummy",
+            "created_on": "2025-12-05T13:53:54Z",
+            "updated_on": "2025-12-05T13:53:54Z",
+            "last_login_on": "2025-12-05T14:32:51Z",
+            "passwd_changed_on": "2025-12-05T13:53:54Z",
+            "twofa_scheme": null,
+            "status": 1
+        },
+        {
+            "id": 7,
+            "login": "haruto.s",
+            "admin": false,
+            "firstname": "陽翔",
+            "lastname": "佐藤",
+            "mail": "haruto.s@dummy",
+            "created_on": "2025-12-05T13:53:11Z",
+            "updated_on": "2025-12-05T13:53:11Z",
+            "last_login_on": "2025-12-05T14:31:04Z",
+            "passwd_changed_on": "2025-12-05T13:53:11Z",
+            "twofa_scheme": null,
+            "status": 1
+        },
+        {
+            "id": 10,
+            "login": "hikari.n",
+            "admin": false,
+            "firstname": "光",
+            "lastname": "中村",
+            "mail": "hikari.n@dummy",
+            "created_on": "2025-12-05T13:55:48Z",
+            "updated_on": "2025-12-05T13:55:48Z",
+            "last_login_on": "2025-12-08T15:42:19Z",
+            "passwd_changed_on": "2025-12-05T13:55:48Z",
+            "twofa_scheme": null,
+            "status": 1
+        },
+        {
+            "id": 6,
+            "login": "mizuki.k",
+            "admin": false,
+            "firstname": "瑞希",
+            "lastname": "水城",
+            "mail": "mizuki.k@dummy",
+            "created_on": "2025-12-05T13:52:42Z",
+            "updated_on": "2025-12-05T13:52:42Z",
+            "last_login_on": "2025-12-05T14:25:39Z",
+            "passwd_changed_on": "2025-12-05T13:52:42Z",
+            "twofa_scheme": null,
+            "status": 1
+        },
+        {
+            "id": 5,
+            "login": "newUser1",
+            "admin": false,
+            "firstname": "User1",
+            "lastname": "new",
+            "mail": "dummy@dummy",
+            "created_on": "2025-11-15T06:04:22Z",
+            "updated_on": "2025-11-15T06:04:22Z",
+            "last_login_on": "2025-12-04T13:53:37Z",
+            "passwd_changed_on": "2025-11-15T06:04:22Z",
+            "twofa_scheme": null,
+            "status": 1
+        },
+        {
+            "id": 9,
+            "login": "ren.y",
+            "admin": false,
+            "firstname": "蓮",
+            "lastname": "山田",
+            "mail": "ren.y@dummy",
+            "created_on": "2025-12-05T13:54:15Z",
+            "updated_on": "2025-12-05T13:54:15Z",
+            "last_login_on": "2025-12-05T14:37:02Z",
+            "passwd_changed_on": "2025-12-05T13:54:15Z",
+            "twofa_scheme": null,
+            "status": 1
+        }
+    ],
+    "total_count": 7,
+    "offset": 0,
+    "limit": 25
+}
