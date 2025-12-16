@@ -23,7 +23,8 @@ def get_specific_date(year: int, month: int, day: int) -> datetime.date:
 
 
 def main() -> None:
-    specific_date = get_yesterday()
+    # specific_date = get_yesterday()
+    specific_date = check_specific_time.get_last_target_date()
     target_date, colect_users, e_users, e_projs = check_specific_time.get_specific_date_time(specific_date)
 
     if target_date is None:

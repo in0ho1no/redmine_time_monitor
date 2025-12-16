@@ -10,3 +10,6 @@ TRACKER_ID = 3
 
 # 親チケットにしたいID
 PARENT_TICKET_ID = 44
+
+# チケットの件名キーワード
+SUBJECT_KEYWORD = '作業時間入力チェック'

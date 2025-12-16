@@ -36,10 +36,10 @@ def create_redmine_ticket(date_str: str, target_users: dict, entered_users: dict
 
     # 件名: 未入力者がいるかどうかで変える
     if missing_table_rows:
-        subject = f'【未入力あり】作業時間入力チェック ({date_str})'
+        subject = f'【未入力あり】{us.SUBJECT_KEYWORD} ({date_str})'
         priority_id = 2  # 通常(2)
     else:
-        subject = f'【完了】作業時間入力チェック ({date_str})'
+        subject = f'【完了】{us.SUBJECT_KEYWORD} ({date_str})'
         priority_id = 1  # 低め(1)
 
     # 説明文
