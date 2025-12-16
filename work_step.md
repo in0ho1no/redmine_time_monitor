@@ -39,3 +39,18 @@ pyproject.tomlの存在するフォルダ内で以下コマンドを実行する
 `trackers.json`の指定でtracker情報を取得できる。
 
     https: //localhost/redmineKome/trackers.json
+
+## タスクスケジューラの設定
+
+1. Windowsメニューで「タスクスケジューラ」と検索して起動する
+1. 右側のメニューから「基本タスクの作成」をクリックする
+    - 名前: 日時入力確認
+    - トリガー: 毎日
+    - 開始日時: 9:00
+    - 間隔: 1日
+    - 操作: プログラムの開始
+1. プログラム/スクリプト:  
+Pythonの実行ファイルパス  
+→ 仮想環境内のexeを指定する(venv\Scripts\python.exe)
+1. 引数の追加:  
+→ スクリプトのパスを指定する(\src\main.py)
