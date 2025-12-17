@@ -7,6 +7,16 @@
             "request": "launch",
             "program": "${workspaceFolder}\\src\\main.py",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Redmineチェック実行",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}\\src\\main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "APIキー"
+            ]
         }
     ]
 }

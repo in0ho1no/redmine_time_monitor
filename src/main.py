@@ -1,7 +1,9 @@
+import argparse
 import datetime
 
 import check_specific_time
 import create_redmine_ticket
+import user_setting as us
 
 TARGET_LIST = [
     6,  # '水城 瑞希
@@ -53,4 +55,19 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    main()
+    # 引数の解析処理
+    parser = argparse.ArgumentParser(description='Redmine作業時間チェックツール')
+    parser.add_argument('api_key', help='RedmineのAPIキーを指定してください')
+
+    try:
+        args = parser.parse_args()
+
+        # 取得した引数で更新
+        us.REDMINE_API_KEY = args.api_key
+
+        # メイン処理実行
+        main()
+
+    except SystemExit:
+        # 引数不足などで終了した場合
+        pass
