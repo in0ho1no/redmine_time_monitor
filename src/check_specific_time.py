@@ -1,3 +1,7 @@
+"""
+Redmineから作業時間データを取得し、集計するモジュール
+"""
+
 import datetime
 import re
 
@@ -10,38 +14,78 @@ import user_setting as us
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def get_specific_date_time(specific_date: datetime.date) -> tuple[str | None, dict | None, dict | None, dict | None]:
+def _get_project_members() -> dict | None:
     """
-    特定プロジェクトのメンバーと指定日の作業時間を取得する
-    Return: (日付文字列, 対象ユーザーdict, ユーザー別集計dict, プロジェクト別集計dict)
-    """
+    Redmineから対象プロジェクトのメンバー一覧を取得する
 
+    Returns:
+        {ユーザーID: ユーザー名} の辞書、または取得失敗時はNone
+    """
     headers = {'X-Redmine-API-Key': us.REDMINE_API_KEY}
     request_opts = {'headers': headers, 'verify': False}
 
-    str_date = specific_date.strftime('%Y-%m-%d')
-    print(f'--- {str_date} のデータを取得中 ---')
-
     try:
-        # メンバー取得
-        members_resp = requests.get(f'{us.REDMINE_URL}/projects/{us.TARGET_PROJECT_ID}/memberships.json', params={'limit': 100}, **request_opts)
-        members_resp.raise_for_status()
+        resp = requests.get(
+            f'{us.REDMINE_URL}/projects/{us.TARGET_PROJECT_ID}/memberships.json',
+            params={'limit': 100},
+            **request_opts,
+        )
+        resp.raise_for_status()
 
         target_users: dict = {}
-        for m in members_resp.json()['memberships']:
+        for m in resp.json()['memberships']:
             if 'user' in m:
                 target_users[m['user']['id']] = m['user']['name']
 
-        # 作業時間取得
-        entries_resp = requests.get(f'{us.REDMINE_URL}/time_entries.json', params={'spent_on': str_date, 'limit': 100}, **request_opts)
-        entries_resp.raise_for_status()
-        entries = entries_resp.json()['time_entries']
-
+        return target_users
     except Exception as e:
-        print(f'データ取得エラー: {e}')
-        return None, None, None, None
+        print(f'プロジェクトメンバー取得エラー: {e}')
+        return None
 
-    # --- 集計 ---
+
+def _get_time_entries(str_date: str) -> list | None:
+    """
+    Redmineから指定日付の作業時間エントリを取得する
+
+    Args:
+        str_date: 対象日付 (YYYY-MM-DD形式)
+
+    Returns:
+        作業時間エントリのリスト、または取得失敗時はNone
+    """
+    headers = {'X-Redmine-API-Key': us.REDMINE_API_KEY}
+    request_opts = {'headers': headers, 'verify': False}
+
+    try:
+        resp = requests.get(
+            f'{us.REDMINE_URL}/time_entries.json',
+            params={'spent_on': str_date, 'limit': 100},
+            **request_opts,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        entries = data.get('time_entries')
+        # 型チェックして list でなければ None を返す
+        if not isinstance(entries, list):
+            print('作業時間エントリ取得エラー: 不正なレスポンス')
+            return None
+        return entries
+    except Exception as e:
+        print(f'作業時間エントリ取得エラー: {e}')
+        return None
+
+
+def _aggregate_entries(entries: list, target_users: dict) -> tuple[dict, dict]:
+    """
+    取得した作業時間エントリをユーザー単位およびプロジェクト単位で集計する
+
+    Args:
+        entries: 作業時間エントリのリスト
+        target_users: 対象ユーザーの辞書 {ID: 名前}
+
+    Returns:
+        (ユーザー別集計, プロジェクト別集計)
+    """
     entered_users: dict = {}
     project_totals: dict = {}
 
@@ -59,11 +103,45 @@ def get_specific_date_time(specific_date: datetime.date) -> tuple[str | None, di
             prj_name = entry['project']['name']
             project_totals[prj_name] = project_totals.get(prj_name, 0) + hours
 
+    return entered_users, project_totals
+
+
+def get_specific_date_time(specific_date: datetime.date) -> tuple[str | None, dict | None, dict | None, dict | None]:
+    """
+    特定プロジェクトのメンバーと指定日の作業時間を取得する
+
+    Args:
+        specific_date: 対象日付
+
+    Returns:
+        (日付文字列, 対象ユーザーdict, ユーザー別集計dict, プロジェクト別集計dict)
+    """
+    str_date = specific_date.strftime('%Y-%m-%d')
+    print(f'--- {str_date} のデータを取得中 ---')
+
+    # プロジェクトメンバーを取得
+    target_users = _get_project_members()
+    if target_users is None:
+        return None, None, None, None
+
+    # 作業時間エントリを取得
+    entries = _get_time_entries(str_date)
+    if entries is None:
+        return None, None, None, None
+
+    # 集計
+    entered_users, project_totals = _aggregate_entries(entries, target_users)
+
     return str_date, target_users, entered_users, project_totals
 
 
 def get_last_target_date() -> datetime.date:
-    """Redmine上の最新のチェックチケットから、最後にチェックした日付を取得する"""
+    """
+    Redmine上の最新のチェックチケットから、最後にチェックした日付を取得する
+
+    Returns:
+        次にチェックすべき日付(前回チェック日の翌日、またはデフォルトは昨日)
+    """
     headers = {'X-Redmine-API-Key': us.REDMINE_API_KEY}
 
     # 件名にキーワードを含み、作成日時の降順で1件だけ取得
@@ -78,7 +156,12 @@ def get_last_target_date() -> datetime.date:
     yesterday = datetime.date.today() - datetime.timedelta(days=1)
 
     try:
-        resp = requests.get(f'{us.REDMINE_URL}/issues.json', headers=headers, params=params, verify=False)
+        resp = requests.get(
+            f'{us.REDMINE_URL}/issues.json',
+            headers=headers,
+            params=params,
+            verify=False,
+        )
         resp.raise_for_status()
         issues = resp.json()['issues']
 
@@ -101,9 +184,9 @@ def get_last_target_date() -> datetime.date:
                 # 今日になってしまった場合は昨日の日付を返す
                 last_date = yesterday
             return last_date
-        else:
-            print('チケットは見つかりましたが、日付の解析に失敗しました。昨日を返します。')
-            return yesterday
+
+        print('チケットは見つかりましたが、日付の解析に失敗しました。昨日を返します。')
+        return yesterday
 
     except Exception as e:
         print(f'前回日付の取得エラー: {e}')
