@@ -63,7 +63,13 @@ def _get_time_entries(str_date: str) -> list | None:
             **request_opts,
         )
         resp.raise_for_status()
-        return resp.json()['time_entries']
+        data = resp.json()
+        entries = data.get('time_entries')
+        # 型チェックして list でなければ None を返す
+        if not isinstance(entries, list):
+            print('作業時間エントリ取得エラー: 不正なレスポンス')
+            return None
+        return entries
     except Exception as e:
         print(f'作業時間エントリ取得エラー: {e}')
         return None
@@ -134,7 +140,7 @@ def get_last_target_date() -> datetime.date:
     Redmine上の最新のチェックチケットから、最後にチェックした日付を取得する
 
     Returns:
-        次にチェックすべき日付（前回チェック日の翌日、またはデフォルトは昨日）
+        次にチェックすべき日付(前回チェック日の翌日、またはデフォルトは昨日)
     """
     headers = {'X-Redmine-API-Key': us.REDMINE_API_KEY}
 
