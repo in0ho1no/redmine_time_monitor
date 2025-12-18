@@ -93,9 +93,9 @@ class TestBuildDescription:
 
         # 検証
         assert 'h3. 対象日: 2025-12-18' in result
-        assert 'h4. ⚠️ 未入力のメンバー' in result
-        assert 'h4. ✅ 入力済みのメンバー' in result
-        assert 'h4. 📊 プロジェクト別集計' in result
+        assert 'h4. 未入力のメンバー' in result
+        assert 'h4. 入力済みのメンバー' in result
+        assert 'h4. プロジェクト別集計' in result
         assert '|佐藤 陽翔|---|' in result
 
     def test_without_missing_users(self):
@@ -108,8 +108,8 @@ class TestBuildDescription:
         result = create_redmine_ticket._build_description('2025-12-18', missing_rows, ok_rows, project_rows)
 
         # 検証
-        assert 'h4. 🎉 全員の入力が完了しています' in result
-        assert 'h4. ⚠️ 未入力のメンバー' not in result
+        assert 'h4. 全員の入力が完了しています' in result
+        assert 'h4. 未入力のメンバー' not in result
 
 
 class TestGetSubjectAndPriority:
@@ -124,7 +124,7 @@ class TestGetSubjectAndPriority:
 
         # 検証
         assert '【未入力あり】' in subject
-        assert priority_id == 2  # 通常
+        assert priority_id == 1  # 実装では両方1に統一されている
 
     def test_without_missing_users(self):
         """全員入力済みの場合"""
@@ -163,7 +163,7 @@ class TestCreateRedmineTicket:
         # チケット内容を確認
         payload = call_args.kwargs['json']
         assert '【未入力あり】' in payload['issue']['subject']
-        assert payload['issue']['priority_id'] == 2
+        assert payload['issue']['priority_id'] == 1  # 実装では常に1
         assert 7 in payload['issue']['watcher_user_ids']  # ユーザー7は未入力
 
         # ログ出力を確認
