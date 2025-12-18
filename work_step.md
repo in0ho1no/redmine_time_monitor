@@ -17,6 +17,7 @@
 今回は以下利用
 
     uv add requests
+    uv add pytest pytest-mock
 
 バージョン指定が必要なら以下
 
