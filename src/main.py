@@ -1,56 +1,41 @@
 import argparse
-import datetime
 
 import check_specific_time
 import create_redmine_ticket
 import user_setting as us
 
-TARGET_LIST = [
-    6,  # '水城 瑞希
-    7,  # '佐藤 陽翔'
-    8,  # '高橋 葵'
-    9,  # '山田 蓮'
-    10,  # '中村 光'
-]
-
-
-def get_yesterday() -> datetime.date:
-    """昨日のdatetime.dateオブジェクトを取得する"""
-    return datetime.date.today() - datetime.timedelta(days=1)
-
-
-def get_specific_date(year: int, month: int, day: int) -> datetime.date:
-    """指定された年・月・日のdatetime.dateオブジェクトを取得する"""
-    return datetime.date(year, month, day)
-
 
 def main() -> None:
-    # specific_date = get_yesterday()
+    """メイン処理: 前回チェック日の翌日を対象として、Redmineチケットを作成する"""
+    # 前回のチェック対象日の翌日を取得
     specific_date = check_specific_time.get_last_target_date()
     target_date, colect_users, e_users, e_projs = check_specific_time.get_specific_date_time(specific_date)
 
+    # データの妥当性チェック
     if target_date is None:
-        print('target_date is None')
+        print('エラー: 対象日付が取得できません')
         return
 
     if colect_users is None:
-        print('t_usecolect_usersrs is None')
-        return
-
-    target_user = {k: colect_users[k] for k in TARGET_LIST if k in colect_users}
-    if target_user is None:
-        print('target_user is None')
+        print('エラー: 対象ユーザーリストが取得できません')
         return
 
     if e_users is None:
-        print('e_users is None')
+        print('エラー: ユーザー別集計が取得できません')
         return
 
     if e_projs is None:
-        print('e_projs is None')
+        print('エラー: プロジェクト別集計が取得できません')
         return
 
-    print(target_date, target_user, e_users)
+    # ターゲットユーザーのみを抽出
+    target_user = {k: colect_users[k] for k in us.TARGET_LIST if k in colect_users}
+
+    print(f'チェック対象日: {target_date}')
+    print(f'ターゲットユーザー数: {len(target_user)}')
+    print(f'入力済みユーザー数: {len(e_users)}')
+
+    # Redmineチケットを作成
     create_redmine_ticket.create_redmine_ticket(target_date, target_user, e_users, e_projs)
 
 
